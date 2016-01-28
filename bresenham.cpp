@@ -275,6 +275,7 @@ int main()
     // draw_rect(100, 100, 200, 200);
 
     std::vector< std::vector<char> > matrix = load_image("ufo.txt");
+    std::vector< std::vector<char> > matrix_battleship = load_image("battleship.txt");
     int xpos = 0;
 
     initscr();
@@ -284,6 +285,8 @@ int main()
             float sx=0, sy=0, originx = 0, originy=0;
 
     while(true) {
+
+        draw_image(matrix_battleship,223,560);
 
     	if ((ch = getch()) == ERR) {
             // user hasn't responded
