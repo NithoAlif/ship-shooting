@@ -28,7 +28,7 @@ void draw_pixel(int offsetX, int offsetY, int color) {
     int b = 255; 
     if (offsetX < 0 || offsetX > vinfo.xres)
         return;
-    if (offsetY < 0 || offsetY > vinfo.yres)
+    if (offsetY < 0 || offsetY > (vinfo.yres - 50))
         return;
         
     location = (offsetX + vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
@@ -86,7 +86,7 @@ void draw_line(float x0, float y0, float x1, float y1, int col = 1) {
 	}
 }
 
-void draw_bullet(float x0, float y0, float x1, float y1, int col) {
+/*void draw_bullet(float x0, float y0, float x1, float y1, int col) {
 	const bool steep = fabs(y1 - y0) > fabs(x1 - x0); // octants 1,2,5,6
 	
 	if (steep) {
@@ -135,7 +135,7 @@ void draw_bullet(float x0, float y0, float x1, float y1, int col) {
 			xmax = xmin + third;
 		}
 	}
-}
+}*/
 
 // (x0, y0)------------
 //    |               |
@@ -163,7 +163,7 @@ void draw_rect(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4, i
 
 void clear(int xRes, int yRes) {
     for (int x = 0; x < xRes - 10; x++) {
-        for (int y = 0; y < yRes - 10; y++) {
+        for (int y = 100; y < yRes - 10; y++) {
             location = (x + vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
                        (y + vinfo.yoffset) * finfo.line_length;
 
@@ -274,9 +274,12 @@ int main()
     // draw_line(0, 0, 100, 700, 1);
     // draw_rect(100, 100, 200, 200);
 
-    std::vector< std::vector<char> > matrix = load_image("ufo.txt");
-    std::vector< std::vector<char> > matrix_battleship = load_image("battleship.txt");
+
+    std::vector< std::vector<char> > ufo = load_image("ufo.txt");
+    std::vector< std::vector<char> > battleship = load_image("battleship.txt");
+
     int xpos = 0;
+    bool is_shoot = false;
 
     initscr();
     noecho();
@@ -284,15 +287,22 @@ int main()
     nodelay(stdscr, TRUE);
             float sx=0, sy=0, originx = 0, originy=0;
 
+    float ex_bullet, ey_bullet, sx_bullet, sy_bullet;
+    float angle;
+    float length;
+
     while(true) {
 
-        draw_image(matrix_battleship,223,560);
+        draw_image(battleship,223,560);
 
     	if ((ch = getch()) == ERR) {
             // user hasn't responded
-            erase_image(matrix, xpos-1, 0);
-            draw_image(matrix, xpos, 0);
+
+            erase_image(ufo, xpos-1, 0);
+            draw_image(ufo, xpos, 0);
             counter--;
+
+
 	        xpos++;
 			if (xpos > vinfo.xres)
 				xpos = 0;
@@ -302,24 +312,21 @@ int main()
             }
 		}
         else {
-            float angle;
-            float length;
-            draw_rect(x1, y1, x2, y2, x3, y3, x4, y4, 0);
             //user has pressed a key ch
+            draw_rect(x1, y1, x2, y2, x3, y3, x4, y4, 0);
             switch(ch) {
             	case 65:		// key up
-                    counter = 3;
-                    angle = atan2((y2 - y1), (x2 - x1));
-                    
-                    originx = x1 + (x2 - x1)/2;
-                    originy = y1 + (y2 - y1)/2;
-                    
-                    sx = originx;
-                    sy = originy + -1000;
+                    if (!is_shoot) {
+                        is_shoot = true;
+                        counter = 3;
+                        angle = atan2((y2 - y1), (x2 - x1));
+                        sx_bullet = x1 + (x2 - x1)/2;
+                        sy_bullet = y1 + (y2 - y1)/2;
+                        ex_bullet = sx_bullet;
+                        ey_bullet = sy_bullet + -100;
 
-                    rotate_point(&sx, &sy, originx, originy, angle);
-
-                    draw_line(originx, originy, sx, sy, 1);
+                        rotate_point(&ex_bullet, &ey_bullet, sx_bullet, sy_bullet, angle);
+                    }
             		break;
 	            case 67:		// key right
 	                rotate_point(&x1, &y1, x_origin, y_origin, 0.1);
@@ -339,7 +346,22 @@ int main()
 	                break;
         	}
         }
-        draw_rect(x1, y1, x2, y2, x3, y3, x4, y4);
+
+        if (is_shoot) {
+            int delta_x = x2 - x1;
+            int delta_y = y2 - y2;
+            
+            ey_bullet -= 5 * cos(angle);
+            ex_bullet += 5 * sin(angle);
+
+            draw_line(sx_bullet, sy_bullet, ex_bullet, ey_bullet);
+
+            if (ey_bullet < 100) {
+                is_shoot = false;
+                clear();
+            }
+        }
+        draw_rect(x1, y1, x2, y2, x3, y3, x4, y4);    
     }
 
     munmap(fbp, screensize);
