@@ -10,43 +10,39 @@
 #include <linux/fb.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
+#include "readfile.cpp"
 
 int fbfd = 0;
 struct fb_var_screeninfo vinfo;
 struct fb_fix_screeninfo finfo;
 long int screensize = 0;
-char *fbp = 0;
-int x = 0, y = 0;
 long int location = 0;
-int fontWidth = 1;
-int fontHeight = 9;
+char *fbp = 0;
 
 
 void draw_pixel(int offsetX, int offsetY, int color) {
     int r = 255;
     int g = 255;
     int b = 255; 
-    if (offsetY < 700 && offsetY > 68) {
-        for (int x = 0; x < 1; x++) {
-            for (int y = 0; y < 1; y++) {
-                location = (offsetX +x + vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
-                           (offsetY +y + vinfo.yoffset) * finfo.line_length;
+    if (offsetX < 0 || offsetX > vinfo.xres)
+        return;
+    if (offsetY < 0 || offsetY > vinfo.yres)
+        return;
+        
+    location = (offsetX + vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
+               (offsetY + vinfo.yoffset) * finfo.line_length;
 
-                if (color == 1) {
-                    *(fbp + location) = g;
-                    *(fbp + location + 1) = b;
-                    *(fbp + location + 2) = r;
-                    *(fbp + location + 3) = 0;
-                } else {
-                    *(fbp + location) = 0;
-                    *(fbp + location + 1) = 0;
-                    *(fbp + location + 2) = 0;
-                    *(fbp + location + 3) = 0;
-                }
-                
-            }
-        }
-    } 
+    if (color == 1) {
+        *(fbp + location) = g;
+        *(fbp + location + 1) = b;
+        *(fbp + location + 2) = r;
+        *(fbp + location + 3) = 0;
+    } else {
+        *(fbp + location) = 0;
+        *(fbp + location + 1) = 0;
+        *(fbp + location + 2) = 0;
+        *(fbp + location + 3) = 0;
+    }
 }
 
 // octants
@@ -115,6 +111,20 @@ void clear(int xRes, int yRes) {
     }
 }
 
+void draw_image(std::vector< std::vector<char> > &matrix, int x, int y) {
+    for (int i = 0; i < matrix.size(); i++) {
+        for (int j = 0; j < matrix[i].size(); j++) {
+            int k = i * 2;
+            if (matrix[i][j] == '1') {
+                draw_pixel(j+x, y+k, 1);
+                draw_pixel(j+x, y+k+1, 1);
+            } else {
+                draw_pixel(j+x, y+k, 0);
+                draw_pixel(j+x, y+k+1, 0);
+            }   
+        }
+    }
+}
 
 int main()
 {
@@ -152,8 +162,19 @@ int main()
     printf("The framebuffer device was mapped to memory successfully.\n");
 
     clear(vinfo.xres, vinfo.yres);
-    draw_line(0, 0, 100, 700, 1);
-    draw_rect(100, 100, 200, 200);
+    // draw_line(0, 0, 100, 700, 1);
+    // draw_rect(100, 100, 200, 200);
+
+    std::vector< std::vector<char> > matrix = load_image("ufo.txt");
+    int xpos = 0;
+    while(true) {
+        draw_image(matrix, xpos, 0);
+        xpos++;
+        if (xpos > vinfo.xres)
+            xpos = 0;
+        usleep(5000);
+    }
+    
     
     munmap(fbp, screensize);
     close(fbfd);
