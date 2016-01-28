@@ -103,7 +103,7 @@ void draw_bullet(float x0, float y0, float x1, float y1, int col) {
 	const int yinc = (y1 > y0) ? 1 : -1;
 	int y = (int)y0;
 
-	int xmin = (int)x0; xmax = (int)x0;
+	int xmin = (int)x0, xmax = (int)x0;
 	int length = (int) dx;
 	int first = rand() % length/12 + length/10;
 	int second = rand() % length/10 + length/6;
@@ -181,10 +181,22 @@ void draw_image(std::vector< std::vector<char> > &matrix, int x, int y) {
             if (matrix[i][j] == '1') {
                 draw_pixel(j+x, y+k, 1);
                 draw_pixel(j+x, y+k+1, 1);
-            } else {
+            }/* else {
                 draw_pixel(j+x, y+k, 0);
                 draw_pixel(j+x, y+k+1, 0);
-            }   
+            } */  
+        }
+    }
+}
+
+void erase_image(std::vector< std::vector<char> > &matrix, int x, int y) {
+    for (int i = 0; i < matrix.size(); i++) {
+        for (int j = 0; j < matrix[i].size(); j++) {
+            int k = i * 2;
+            if (matrix[i][j] == '1') {
+                draw_pixel(j+x, y+k, 0);
+                draw_pixel(j+x, y+k+1, 0);
+            }  
         }
     }
 }
@@ -273,6 +285,7 @@ int main()
 
     	if ((ch = getch()) == ERR) {
             // user hasn't responded
+            erase_image(matrix, xpos-1, 0);
             draw_image(matrix, xpos, 0);
 	        xpos++;
 			if (xpos > vinfo.xres)
@@ -283,6 +296,7 @@ int main()
             float sx, sy, originx, originy;
             float angle;
             float length;
+            draw_rect(x1, y1, x2, y2, x3, y3, x4, y4, 0);
             //user has pressed a key ch
             switch(ch) {
             	case 65:		// key up
@@ -303,14 +317,14 @@ int main()
 	                rotate_point(&x2, &y2, x_origin, y_origin, 0.1);
 	                rotate_point(&x3, &y3, x_origin, y_origin, 0.1);
 	                rotate_point(&x4, &y4, x_origin, y_origin, 0.1);
-                    clear(vinfo.xres, vinfo.yres);
+                    //clear(vinfo.xres, vinfo.yres);
 	                break;
 	            case 68:		// key left
 	                rotate_point(&x1, &y1, x_origin, y_origin, -0.1);
 	                rotate_point(&x2, &y2, x_origin, y_origin, -0.1);
 	                rotate_point(&x3, &y3, x_origin, y_origin, -0.1);
 	                rotate_point(&x4, &y4, x_origin, y_origin, -0.1);
-                    clear(vinfo.xres, vinfo.yres);
+                    //clear(vinfo.xres, vinfo.yres);
 	                break;
 	            default:
 	                break;
