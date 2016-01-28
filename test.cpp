@@ -11,39 +11,43 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <ncurses.h>
-#include "readfile.cpp"
 
 int fbfd = 0;
 struct fb_var_screeninfo vinfo;
 struct fb_fix_screeninfo finfo;
 long int screensize = 0;
-long int location = 0;
 char *fbp = 0;
+int x = 0, y = 0;
+long int location = 0;
+int fontWidth = 1;
+int fontHeight = 9;
 
 
 void draw_pixel(int offsetX, int offsetY, int color) {
     int r = 255;
     int g = 255;
     int b = 255; 
-    if (offsetX < 0 || offsetX > vinfo.xres)
-        return;
-    if (offsetY < 0 || offsetY > vinfo.yres)
-        return;
-        
-    location = (offsetX + vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
-               (offsetY + vinfo.yoffset) * finfo.line_length;
+    if (offsetY < 700 && offsetY > 68) {
+        for (int x = 0; x < 1; x++) {
+            for (int y = 0; y < 1; y++) {
+                location = (offsetX +x + vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
+                           (offsetY +y + vinfo.yoffset) * finfo.line_length;
 
-    if (color == 1) {
-        *(fbp + location) = g;
-        *(fbp + location + 1) = b;
-        *(fbp + location + 2) = r;
-        *(fbp + location + 3) = 0;
-    } else {
-        *(fbp + location) = 0;
-        *(fbp + location + 1) = 0;
-        *(fbp + location + 2) = 0;
-        *(fbp + location + 3) = 0;
-    }
+                if (color == 1) {
+                    *(fbp + location) = g;
+                    *(fbp + location + 1) = b;
+                    *(fbp + location + 2) = r;
+                    *(fbp + location + 3) = 0;
+                } else {
+                    *(fbp + location) = 0;
+                    *(fbp + location + 1) = 0;
+                    *(fbp + location + 2) = 0;
+                    *(fbp + location + 3) = 0;
+                }
+                
+            }
+        }
+    } 
 }
 
 // octants
@@ -104,25 +108,10 @@ void clear(int xRes, int yRes) {
             location = (x + vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
                        (y + vinfo.yoffset) * finfo.line_length;
 
-            *(fbp + location) = 0;        // Some blue
-            *(fbp + location + 1) = 0;      // A little green
-            *(fbp + location + 2) = 0;      // A lot of red
+            *(fbp + location) = 23;        // Some blue
+            *(fbp + location + 1) = 23;      // A little green
+            *(fbp + location + 2) = 23;      // A lot of red
             *(fbp + location + 3) = 0;      // No transparency
-        }
-    }
-}
-
-void draw_image(std::vector< std::vector<char> > &matrix, int x, int y) {
-    for (int i = 0; i < matrix.size(); i++) {
-        for (int j = 0; j < matrix[i].size(); j++) {
-            int k = i * 2;
-            if (matrix[i][j] == '1') {
-                draw_pixel(j+x, y+k, 1);
-                draw_pixel(j+x, y+k+1, 1);
-            } else {
-                draw_pixel(j+x, y+k, 0);
-                draw_pixel(j+x, y+k+1, 0);
-            }   
         }
     }
 }
@@ -143,6 +132,7 @@ void rotate_point(float* x1, float* y1, float x2, float y2, float angle) {
     *x1 = xnew + x2;
     *y1 = ynew + y2;
 }
+
 
 int main()
 {
@@ -181,81 +171,50 @@ int main()
 
     clear(vinfo.xres, vinfo.yres);
 
+    initscr();
+    noecho();
+    timeout(-1);
+    int ch;
+
     float x_origin = vinfo.xres/2;
-    float y_origin = vinfo.yres-40;
+    float y_origin = vinfo.yres-20;
 
     float x1 = 390;
     float y1 = 500;
-    float x2 = 410;
-    float y2 = 500;
-    float x3 = 390;
-    float y3 = 580;
-    float x4 = 410;
-    float y4 = 580;
 
-    draw_line(x1,y1,x2,y2,1);
-    draw_line(x2,y2,x4,y4,1);
-    draw_line(x4,y4,x3,y3,1);
-    draw_line(x3,y3,x1,y1,1);
 
-    // draw_line(0, 0, 100, 700, 1);
-    // draw_rect(100, 100, 200, 200);
 
-    std::vector< std::vector<char> > matrix = load_image("ufo.txt");
-    int xpos = 0;
+    // (x1,y1)
+    // (390,500)
+    //    |                 
+    //    |                 
+    //    |                 
+    // (390,580)
+    // (x2,y2)
 
-    initscr();
-    noecho();
-    int ch;
-    nodelay(stdscr, TRUE);
 
-    while(true) {
+    draw_line(x1,y1,x_origin,y_origin,1);
+    float s, c, xnew, ynew;
 
-    	if ((ch = getch()) == ERR) {
-            // user hasn't responded
-            draw_image(matrix, xpos, 0);
-	        xpos++;
-			if (xpos > vinfo.xres)
-				xpos = 0;
-			usleep(5000);
-		}
-        else {
-            //user has pressed a key ch
-            switch(ch) {
-            	case 65:		// key up
-            		break;
-	            case 67:		// key right
-	                rotate_point(&x1, &y1, x_origin, y_origin, 0.1);
-	                rotate_point(&x2, &y2, x_origin, y_origin, 0.1);
-	                rotate_point(&x3, &y3, x_origin, y_origin, 0.1);
-	                rotate_point(&x4, &y4, x_origin, y_origin, 0.1);
-	                clear(vinfo.xres, vinfo.yres);
-	                draw_line(x1,y1,x2,y2,1);
-				    draw_line(x2,y2,x4,y4,1);
-				    draw_line(x4,y4,x3,y3,1);
-				    draw_line(x3,y3,x1,y1,1);               
-	                break;
-	            case 68:		// key left
-	                rotate_point(&x1, &y1, x_origin, y_origin, -0.1);
-	                rotate_point(&x2, &y2, x_origin, y_origin, -0.1);
-	                rotate_point(&x3, &y3, x_origin, y_origin, -0.1);
-	                rotate_point(&x4, &y4, x_origin, y_origin, -0.1);
-	                clear(vinfo.xres, vinfo.yres);
-	                draw_line(x1,y1,x2,y2,1);
-				    draw_line(x2,y2,x4,y4,1);
-				    draw_line(x4,y4,x3,y3,1);
-				    draw_line(x3,y3,x1,y1,1); 
-	                break;
-	            default:
-	                draw_line(x1,y1,x2,y2,1);
-				    draw_line(x2,y2,x4,y4,1);
-				    draw_line(x4,y4,x3,y3,1);
-				    draw_line(x3,y3,x1,y1,1);
-	                break;
-        	}
+    while(1) {
+        ch = getch();          
+        switch(ch) {
+            case 67:       // key right
+                rotate_point(&x1, &y1, x_origin, y_origin, 0.01);
+                clear(vinfo.xres, vinfo.yres);
+                draw_line(x1,y1,x_origin,y_origin,1);                
+                break;
+            case 68:       // key left
+                rotate_point(&x1, &y1, x_origin, y_origin, -0.01);
+                clear(vinfo.xres, vinfo.yres);
+                draw_line(x1,y1,x_origin,y_origin,1);   
+                break;
+            default:
+                draw_line(x1,y1,x_origin,y_origin,1);
+                break;
         }
     }
-
+    
     munmap(fbp, screensize);
     close(fbfd);
     return 0;
