@@ -85,6 +85,56 @@ void draw_line(float x0, float y0, float x1, float y1, int col) {
 	}
 }
 
+void draw_bullet(float x0, float y0, float x1, float y1, int col) {
+	const bool steep = fabs(y1 - y0) > fabs(x1 - x0); // octants 1,2,5,6
+	
+	if (steep) {
+		std::swap(x0, y0);
+		std::swap(x1, y1);
+	}
+	if (x0 > x1) {
+		std::swap(x0, x1);
+		std::swap(y0, y1);
+	}
+
+	const float dx = x1 - x0;
+	const float dy = fabs(y1 - y0);
+	float err = dx / 2.0f;
+	const int yinc = (y1 > y0) ? 1 : -1;
+	int y = (int)y0;
+
+	int xmin = (int)x0; xmax = (int)x0;
+	int length = (int) dx;
+	int first = rand() % length/12 + length/10;
+	int second = rand() % length/10 + length/6;
+	int third = rand() % length/8 + length/4;
+	int rem = length - first - second - third;
+	int rem2 = rem/2;
+	rem -= rem2;
+
+	xmax += first;
+	for (int i = 0; i < 3; i++) {
+		for (int x = xmin; x < xmax; x++) {
+			if (steep) {
+				draw_pixel(y, x, col);
+			} else {
+				draw_pixel(x, y, col);
+			}
+			err -= dy;
+			if (err < 0) {
+				y += yinc;
+				err += dx;
+			}
+		}
+		if (i == 0) {
+			xmin += first + rem;
+			xmax = xmin + second;
+		} else if (i == 1) {
+			xmin += second + rem2;
+			xmax = xmin + third;
+		}
+	}
+}
 
 // (x0, y0)------------
 //    |               |
