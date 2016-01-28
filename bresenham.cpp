@@ -19,6 +19,7 @@ struct fb_fix_screeninfo finfo;
 long int screensize = 0;
 long int location = 0;
 char *fbp = 0;
+int counter = 0;
 
 
 void draw_pixel(int offsetX, int offsetY, int color) {
@@ -193,7 +194,7 @@ void erase_image(std::vector< std::vector<char> > &matrix, int x, int y) {
     for (int i = 0; i < matrix.size(); i++) {
         for (int j = 0; j < matrix[i].size(); j++) {
             int k = i * 2;
-            if (matrix[i][j] == '1') {
+            if (matrix[i][j] == '0') {
                 draw_pixel(j+x, y+k, 0);
                 draw_pixel(j+x, y+k+1, 0);
             }  
@@ -288,11 +289,14 @@ int main()
             // user hasn't responded
             erase_image(matrix, xpos-1, 0);
             draw_image(matrix, xpos, 0);
+            counter--;
 	        xpos++;
 			if (xpos > vinfo.xres)
 				xpos = 0;
 			usleep(5000);
-        //draw_line(originx, originy, sx, sy, 0);
+            if (counter == 0) {
+                draw_line(originx, originy, sx, sy, 0);                
+            }
 		}
         else {
             float angle;
@@ -301,6 +305,7 @@ int main()
             //user has pressed a key ch
             switch(ch) {
             	case 65:		// key up
+                    counter = 3;
                     angle = atan2((y2 - y1), (x2 - x1));
                     
                     originx = x1 + (x2 - x1)/2;
