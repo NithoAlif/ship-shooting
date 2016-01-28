@@ -53,7 +53,7 @@ void draw_pixel(int offsetX, int offsetY, int color) {
 //  4/|\7
 //  /5|6\
 
-void draw_line(float x0, float y0, float x1, float y1, int col) {
+void draw_line(float x0, float y0, float x1, float y1, int col = 1) {
 	const bool steep = fabs(y1 - y0) > fabs(x1 - x0); // octants 1,2,5,6
 	
 	if (steep) {
@@ -280,9 +280,23 @@ int main()
 			usleep(5000);
 		}
         else {
+            float sx, sy, originx, originy;
+            float angle;
+            float length;
             //user has pressed a key ch
             switch(ch) {
             	case 65:		// key up
+                    angle = atan2((y2 - y1), (x2 - x1));
+                    
+                    originx = x1 + (x2 - x1)/2;
+                    originy = y1 + (y2 - y1)/2;
+                    
+                    sx = originx;
+                    sy = originy + -1000;
+
+                    rotate_point(&sx, &sy, originx, originy, angle);
+
+                    draw_line(originx, originy, sx, sy);
             		break;
 	            case 67:		// key right
 	                rotate_point(&x1, &y1, x_origin, y_origin, 0.1);
