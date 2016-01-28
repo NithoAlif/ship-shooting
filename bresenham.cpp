@@ -98,6 +98,18 @@ void draw_rect(int x0, int y0, int x1, int y1, int color = 1) {
 	draw_line(x0, y1, x0, y0, color);
 }
 
+// (x0, y0)-------(x1, y1)
+//    |               |
+//    |               |
+//    |               |
+// (x2, y2)-------(x3, y3)
+void draw_rect(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4, int color = 1) {
+    draw_line(x1,y1,x2,y2,color);
+    draw_line(x2,y2,x4,y4,color);
+    draw_line(x4,y4,x3,y3,color);
+    draw_line(x3,y3,x1,y1,color); 
+}
+
 void clear(int xRes, int yRes) {
     for (int x = 0; x < xRes - 10; x++) {
         for (int y = 0; y < yRes - 10; y++) {
@@ -181,8 +193,6 @@ int main()
 
     clear(vinfo.xres, vinfo.yres);
 
-    float x_origin = vinfo.xres/2;
-    float y_origin = vinfo.yres-40;
 
     float x1 = 390;
     float y1 = 500;
@@ -193,10 +203,10 @@ int main()
     float x4 = 410;
     float y4 = 580;
 
-    draw_line(x1,y1,x2,y2,1);
-    draw_line(x2,y2,x4,y4,1);
-    draw_line(x4,y4,x3,y3,1);
-    draw_line(x3,y3,x1,y1,1);
+    float x_origin = x3 + (x4 - x3)/2;
+    float y_origin = y4;
+
+    draw_rect(x1, y1, x2, y2, x3, y3, x4, y4);
 
     // draw_line(0, 0, 100, 700, 1);
     // draw_rect(100, 100, 200, 200);
@@ -229,31 +239,20 @@ int main()
 	                rotate_point(&x2, &y2, x_origin, y_origin, 0.1);
 	                rotate_point(&x3, &y3, x_origin, y_origin, 0.1);
 	                rotate_point(&x4, &y4, x_origin, y_origin, 0.1);
-	                clear(vinfo.xres, vinfo.yres);
-	                draw_line(x1,y1,x2,y2,1);
-				    draw_line(x2,y2,x4,y4,1);
-				    draw_line(x4,y4,x3,y3,1);
-				    draw_line(x3,y3,x1,y1,1);               
+                    clear(vinfo.xres, vinfo.yres);
 	                break;
 	            case 68:		// key left
 	                rotate_point(&x1, &y1, x_origin, y_origin, -0.1);
 	                rotate_point(&x2, &y2, x_origin, y_origin, -0.1);
 	                rotate_point(&x3, &y3, x_origin, y_origin, -0.1);
 	                rotate_point(&x4, &y4, x_origin, y_origin, -0.1);
-	                clear(vinfo.xres, vinfo.yres);
-	                draw_line(x1,y1,x2,y2,1);
-				    draw_line(x2,y2,x4,y4,1);
-				    draw_line(x4,y4,x3,y3,1);
-				    draw_line(x3,y3,x1,y1,1); 
+                    clear(vinfo.xres, vinfo.yres);
 	                break;
 	            default:
-	                draw_line(x1,y1,x2,y2,1);
-				    draw_line(x2,y2,x4,y4,1);
-				    draw_line(x4,y4,x3,y3,1);
-				    draw_line(x3,y3,x1,y1,1);
 	                break;
         	}
         }
+        draw_rect(x1, y1, x2, y2, x3, y3, x4, y4);
     }
 
     munmap(fbp, screensize);
