@@ -279,6 +279,7 @@ int main()
     std::vector< std::vector<char> > battleship = load_image("battleship.txt");
 
     int xpos = 0;
+    int life = 5;
     bool is_shoot = false;
 
     initscr();
@@ -291,7 +292,7 @@ int main()
     float angle;
     float length;
 
-    while(true) {
+    while(life != 0) {
 
         draw_image(battleship,223,560);
 
@@ -359,6 +360,10 @@ int main()
             if (ey_bullet < 100) {
                 is_shoot = false;
                 clear();
+            }
+
+            if (ey_bullet < 100 && ex_bullet >= xpos && ex_bullet <= (xpos + 400)) {
+                life--;
             }
         }
         draw_rect(x1, y1, x2, y2, x3, y3, x4, y4);    
