@@ -49,6 +49,35 @@ void draw_line(int x0, int y0, int x1, int y1) {
     }
 }
 
+void DrawCircle(int x0, int y0, int radius)
+{
+  int x = radius;
+  int y = 0;
+  int decisionOver2 = 1 - x;   // Decision criterion divided by 2 evaluated at x=r, y=0
+
+  while( y <= x )
+  {
+    drawBlock( x + x0,  y + y0); // Octant 1
+    drawBlock( y + x0,  x + y0); // Octant 2
+    drawBlock(-x + x0,  y + y0); // Octant 4
+    drawBlock(-y + x0,  x + y0); // Octant 3
+    drawBlock(-x + x0, -y + y0); // Octant 5
+    drawBlock(-y + x0, -x + y0); // Octant 6
+    drawBlock( x + x0, -y + y0); // Octant 7
+    drawBlock( y + x0, -x + y0); // Octant 8
+    y++;
+    if (decisionOver2<=0)
+    {
+      decisionOver2 += 2 * y + 1;   // Change in decision criterion for y -> y+1
+    }
+    else
+    {
+      x--;
+      decisionOver2 += 2 * (y - x) + 1;   // Change for y -> y+1, x -> x-1
+    }
+  }
+}
+
 int main() {
     // Open the file for reading and writing
     fbfd = open("/dev/fb0", O_RDWR);
@@ -84,6 +113,8 @@ int main() {
     printf("The framebuffer device was mapped to memory successfully.\n");
 
     draw_line(1,1,500,500);
+
+    DrawCircle(600, 600, 30);
     
     //draw_plane();
     //drawBlock(10, 10);
