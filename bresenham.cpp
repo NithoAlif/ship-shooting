@@ -280,6 +280,7 @@ int main()
     noecho();
     int ch;
     nodelay(stdscr, TRUE);
+            float sx=0, sy=0, originx = 0, originy=0;
 
     while(true) {
 
@@ -291,9 +292,9 @@ int main()
 			if (xpos > vinfo.xres)
 				xpos = 0;
 			usleep(5000);
+        //draw_line(originx, originy, sx, sy, 0);
 		}
         else {
-            float sx, sy, originx, originy;
             float angle;
             float length;
             draw_rect(x1, y1, x2, y2, x3, y3, x4, y4, 0);
@@ -310,7 +311,7 @@ int main()
 
                     rotate_point(&sx, &sy, originx, originy, angle);
 
-                    draw_line(originx, originy, sx, sy);
+                    draw_line(originx, originy, sx, sy, 1);
             		break;
 	            case 67:		// key right
 	                rotate_point(&x1, &y1, x_origin, y_origin, 0.1);
